@@ -1,4 +1,5 @@
 from typing import Union, Tuple, List, Dict
+from sqlalchemy import Boolean
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import SQLAlchemyError
@@ -53,6 +54,15 @@ class News(Base):
 
     def __repr__(self):
         return f"<News(title='{self.title[:20]}...', source='{self.source}')>"
+    
+class Subscription(Base):
+    __tablename__ = 'subscriptions'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False, unique=True)  # Уникальный ID пользователя Telegram
+    is_active = Column(Boolean, default=True)
+    categories = Column(String, default='финансы')  # Категории через запятую
+    last_sent_at = Column(DateTime)  # Время последней рассылки
 
 # 5. Создаем таблицы (если их нет)
 Base.metadata.create_all(engine)

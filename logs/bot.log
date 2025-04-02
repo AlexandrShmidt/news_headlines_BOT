@@ -1,0 +1,23 @@
+2025-04-02 12:34:55,581 - __main__ - INFO - === Логгер инициализирован ===
+2025-04-02 12:34:55,628 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-04-02 12:34:55,628 - apscheduler.scheduler - INFO - Added job "start_scheduler.<locals>.<lambda>" to job store "default"
+2025-04-02 12:34:55,628 - apscheduler.scheduler - INFO - Scheduler started
+2025-04-02 12:34:55,628 - bot.scheduler - INFO - Планировщик запущен в режиме ежечасной рассылки
+2025-04-02 12:34:55,926 - __main__ - INFO - Бот запущен!
+2025-04-02 12:35:05,616 - apscheduler.executors.default - INFO - Running job "start_scheduler.<locals>.<lambda> (trigger: interval[1:00:00], next run at: 2025-04-02 12:35:05 +07)" (scheduled at 2025-04-02 12:35:05.597616+07:00)
+2025-04-02 12:35:05,625 - bot.scheduler - INFO - Нет новых новостей за последний час
+2025-04-02 12:35:05,632 - apscheduler.executors.default - INFO - Job "start_scheduler.<locals>.<lambda> (trigger: interval[1:00:00], next run at: 2025-04-02 13:35:05 +07)" executed successfully
+2025-04-02 12:35:30,125 - __main__ - INFO - Тест лога от пользователя: 866217039 (Александр)
+2025-04-02 12:36:25,307 - TeleBot - ERROR - Infinity polling: polling exited
+2025-04-02 12:36:25,307 - TeleBot - ERROR - Break infinity polling
+2025-04-02 12:36:28,514 - __main__ - INFO - === Логгер инициализирован ===
+2025-04-02 12:36:28,565 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-04-02 12:36:28,566 - apscheduler.scheduler - INFO - Added job "start_scheduler.<locals>.<lambda>" to job store "default"
+2025-04-02 12:36:28,566 - apscheduler.scheduler - INFO - Scheduler started
+2025-04-02 12:36:28,566 - bot.scheduler - INFO - Планировщик запущен в режиме ежечасной рассылки
+2025-04-02 12:36:28,865 - __main__ - INFO - Бот запущен!
+2025-04-02 12:36:38,523 - apscheduler.executors.default - INFO - Running job "start_scheduler.<locals>.<lambda> (trigger: interval[1:00:00], next run at: 2025-04-02 12:36:38 +07)" (scheduled at 2025-04-02 12:36:38.514510+07:00)
+2025-04-02 12:36:38,523 - bot.scheduler - INFO - Нет новых новостей за последний час
+2025-04-02 12:36:38,523 - apscheduler.executors.default - INFO - Job "start_scheduler.<locals>.<lambda> (trigger: interval[1:00:00], next run at: 2025-04-02 13:36:38 +07)" executed successfully
+2025-04-02 12:37:47,510 - TeleBot - ERROR - Infinity polling: polling exited
+2025-04-02 12:37:47,510 - TeleBot - ERROR - Break infinity polling
