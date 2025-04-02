@@ -4,6 +4,7 @@ from telebot import TeleBot, types
 from bot.config import config
 from bot.parsers import get_ratings_ru_news
 from bot.keyboards import start_keyboard
+from bot.database import get_latest_news  # Импортируем новую функцию
 
 # --- Настройка логгирования ---
 try:
@@ -26,6 +27,14 @@ except Exception as e:
 # --- Инициализация бота ---
 bot = TeleBot(config.BOT_TOKEN)
 
+def format_news_for_telegram(news_items: list) -> str:
+    """Форматирует новости из БД для вывода в Telegram"""
+    formatted = []
+    for item in news_items:
+        domain = item['source'].replace("www.", "")
+        formatted.append(f"[{item['title']}]({item['url']}) ({domain})")
+    return "\n\n".join(formatted)
+
 # --- Обработчики команд ---
 @bot.message_handler(commands=['start'])
 def handle_start(message: types.Message):
@@ -41,22 +50,38 @@ def handle_start(message: types.Message):
 
 @bot.callback_query_handler(func=lambda call: call.data == "news_menu")
 def handle_news_menu(call: types.CallbackQuery):
-    """Обработчик кнопки новостей - сразу показывает новости с ratings.ru"""
+    """Обработчик кнопки новостей - сначала проверяет БД, потом парсит при необходимости"""
     try:
         bot.answer_callback_query(call.id, "Загружаю новости...")
-        news = get_ratings_ru_news()
         
-        if news:
+        # 1. Пытаемся получить новости из БД
+        db_news = get_latest_news(limit=10)
+        
+        if db_news:
+            # Если в БД есть новости - показываем их
+            formatted_news = format_news_for_telegram(db_news)
             bot.send_message(
                 call.message.chat.id,
-                "📰 Последние новости:\n\n" + "\n\n".join(news),
+                "📰 Последние новости из базы данных:\n\n" + formatted_news,
                 parse_mode="Markdown",
                 disable_web_page_preview=True
             )
         else:
-            bot.send_message(call.message.chat.id, "⚠️ Не удалось загрузить новости.")
+            # Если в БД нет новостей - парсим и сохраняем
+            news = get_ratings_ru_news()
+            if news:
+                bot.send_message(
+                    call.message.chat.id,
+                    "📰 Последние новости (обновленные):\n\n" + "\n\n".join(news),
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True
+                )
+            else:
+                bot.send_message(call.message.chat.id, "⚠️ Не удалось загрузить новости.")
+                
     except Exception as e:
         logger.error(f"Ошибка загрузки новостей: {e}")
+        bot.send_message(call.message.chat.id, "⚠️ Произошла ошибка при загрузке новостей.")
 
 # --- Запуск бота ---
 if __name__ == "__main__":

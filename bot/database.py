@@ -1,7 +1,8 @@
-from typing import Union, Tuple
-from sqlalchemy import create_engine, Column, Integer, String
+from typing import Union, Tuple, List, Dict
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
 from bot.config import config  # Импортируем настройки из config.py
 import logging
 
@@ -32,26 +33,41 @@ class User(Base):
     def __repr__(self):
         return f"<User(user_id={self.user_id}, site='{self.pinned_site_text}')>"
 
-# 4. Создаем таблицы (если их нет)
+# 4. Модель новости
+class News(Base):
+    """
+    Таблица news в БД:
+    - id: автоинкрементный ID
+    - title: заголовок новости
+    - url: ссылка на новость
+    - source: источник (например, "ironfx.com")
+    - published_at: дата публикации (по умолчанию текущая)
+    """
+    __tablename__ = "news"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(Text, nullable=False)
+    url = Column(String, nullable=False)
+    source = Column(String, nullable=False)
+    published_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<News(title='{self.title[:20]}...', source='{self.source}')>"
+
+# 5. Создаем таблицы (если их нет)
 Base.metadata.create_all(engine)
 
-# 5. Создаем фабрику сессий
+# 6. Создаем фабрику сессий
 Session = sessionmaker(bind=engine)
 
-# 6. Функции для работы с БД
+# 7. Функции для работы с пользователями (оставляем как было)
 def get_user_data(user_id: int) -> Union[Tuple[str, str], Tuple[None, None]]:
-    """
-    Получает данные пользователя из БД.
-    Если пользователя нет — создает нового с дефолтными значениями.
-    
-    Возвращает: (pinned_site_url, pinned_site_text) или (None, None) при ошибке
-    """
+    """Получает данные пользователя из БД."""
     session = Session()
     try:
         user = session.query(User).filter_by(user_id=user_id).first()
         
         if not user:
-            # Создаем нового пользователя
             new_user = User(
                 user_id=user_id,
                 pinned_site_url="https://www.ironfx.com/ru/ironfx-trading-school/financial-news/",
@@ -70,30 +86,47 @@ def get_user_data(user_id: int) -> Union[Tuple[str, str], Tuple[None, None]]:
     finally:
         session.close()
 
-def update_pinned_site(user_id: int, url: str, text: str) -> bool:
-    """
-    Обновляет закрепленный сайт пользователя.
-    
-    Возвращает: 
-    - True при успехе
-    - False при ошибке или если пользователь не найден
-    """
+# 8. Новые функции для работы с новостями
+def save_news(news_items: List[Dict[str, str]]) -> bool:
+    """Сохраняет новости в БД (игнорирует дубликаты)."""
     session = Session()
     try:
-        user = session.query(User).filter_by(user_id=user_id).first()
-        if not user:
-            logger.warning(f"Пользователь {user_id} не найден")
-            return False
+        for item in news_items:
+            # Проверяем, есть ли уже такая новость (по заголовку и источнику)
+            exists = session.query(News).filter(
+                News.title == item["title"],
+                News.source == item["source"]
+            ).first()
             
-        user.pinned_site_url = url
-        user.pinned_site_text = text
+            if not exists:
+                news = News(
+                    title=item["title"],
+                    url=item["url"],
+                    source=item["source"]
+                )
+                session.add(news)
+        
         session.commit()
-        logger.info(f"Обновлен сайт для {user_id}: {text}")
         return True
         
     except SQLAlchemyError as e:
-        logger.error(f"Ошибка БД при update_pinned_site: {e}")
+        logger.error(f"Ошибка БД при save_news: {e}")
         session.rollback()
         return False
+    finally:
+        session.close()
+
+def get_latest_news(limit: int = 10) -> List[Dict[str, str]]:
+    """Получает последние новости из БД."""
+    session = Session()
+    try:
+        news = session.query(News).order_by(News.published_at.desc()).limit(limit).all()
+        return [
+            {"title": item.title, "url": item.url, "source": item.source}
+            for item in news
+        ]
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка БД при get_latest_news: {e}")
+        return []
     finally:
         session.close()
